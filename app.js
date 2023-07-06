@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
   res.send(JSON.stringify(data.data));
 });
 
-mongoose.connect('mongodb+srv://lakshaygarg:hmtQHahi3aZR2P7T@cluster0.sqbda3w.mongodb.net/retryWrites=true&w=majority', { useNewUrlParser: false });
+mongoose.connect('mongodb+srv://lakshaygarg:hmtQHahi3aZR2P7T@cluster0.sqbda3w.mongodb.net/test', { useNewUrlParser: false });
 mongoose.connection.once('open', function () {
   console.log('Database connected Successfully');
 }).on('error', function (err) {
@@ -100,7 +100,9 @@ app.post('/addExpense', jsonParser, async function (req, res) {
 
 app.post('/getExpense', jsonParser, async function (req, res) {
   console.log(req)
+  debugger;
   const filter = { user_id: req.body.user_id };
+  debugger;
   const all = await Expenses.find(filter);
   all.sort(function (a, b) { return new Date(b.date) - new Date(a.date) });
   res.setHeader('content-type', 'application/json');
@@ -118,9 +120,17 @@ app.post('/getEarning', jsonParser, async function (req, res) {
   res.send(JSON.stringify(all));
 });
 
-app.get('/getTotalEarning', async function (req, res) {
-  const filter = { "_id": req.id };
-  const all = await User.find(filter, { total_earning: 1, _id: 1 });
+app.post('/getTotalEarning', async function (req, res) {
+  const id = new ObjectId(req.body.id);
+  const all = await User.find({ _id: id }, { total_earning: 1});
+  res.setHeader('content-type', 'application/json');
+  res.header("Access-Control-Allow-Origin", "*");;
+  res.send(JSON.stringify(all));
+});
+
+app.post('/getTotalExpense', async function (req, res) {
+  const id = new ObjectId(req.body.id);
+  const all = await User.find({ _id: id }, {total_expense: 1 });
   res.setHeader('content-type', 'application/json');
   res.header("Access-Control-Allow-Origin", "*");;
   res.send(JSON.stringify(all));
@@ -143,8 +153,8 @@ app.post('/login', jsonParser, async function (req, res) {
 });
 
 app.get('/getPaymentMethods', jsonParser, async function (req, res) {
-  res.setHeader('content-type', 'application/json');
-  res.header("Access-Control-Allow-Origin", "*");
+  // res.setHeader('content-type', 'application/json');
+  // res.header("Access-Control-Allow-Origin", "*");
   const filter = {};
   const all = await PaymentMethods.find(filter);
   res.send(JSON.stringify(all));
