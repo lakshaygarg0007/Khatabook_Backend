@@ -100,9 +100,7 @@ app.post('/addExpense', jsonParser, async function (req, res) {
 
 app.post('/getExpense', jsonParser, async function (req, res) {
   console.log(req)
-  debugger;
   const filter = { user_id: req.body.user_id };
-  debugger;
   const all = await Expenses.find(filter);
   all.sort(function (a, b) { return new Date(b.date) - new Date(a.date) });
   res.setHeader('content-type', 'application/json');
@@ -189,6 +187,18 @@ app.post('/deleteEarning', jsonParser, async function (req, res) {
   }
 });
 
+app.post('/getPieCharData', jsonParser, async function (req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.header("Access-Control-Allow-Origin", "*");
+  try {
+    const filter = { user_id: req.body.user_id };
+    const all = await Expenses.find(filter, { payment_method: 1, amount: 1 });
+    res.send(JSON.stringify(all));
+  } catch (error) {
+    req.send('Could Not Delete Earning');
+  }
+});
+
 app.post('/deleteExpense', jsonParser, async function (req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.header("Access-Control-Allow-Origin", "*");
@@ -214,7 +224,9 @@ app.post('/getEarningAndExpense', jsonParser, async function(req, res) {
           console.log(err);
           return;
       }
-  });
+    });
+
+
 
   const total_earning = await Earnings.aggregate([
       {$match: { user_id: req.body.user_id }},
@@ -239,3 +251,4 @@ app.post('/getEarningAndExpense', jsonParser, async function(req, res) {
     throw error;
   }
 });
+
