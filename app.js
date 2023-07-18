@@ -51,13 +51,58 @@ app.post('/addEarning', jsonParser, async function (req, res) {
     var earning = new Earnings(req.body);
     var id = new ObjectId(req.body.user_id)
     const user = await User.find({ _id: id });
-    await User.updateOne({ _id: id }, { $set: { total_expense: parseFloat(user[0].total_expense) + req.body.amount } });
+    await User.updateOne({ _id: id }, { $set: { total_earning: parseFloat(user[0].total_earning) + req.body.amount } });
     earning.save();
     res.send('Record Saved Successfully');
   } catch (error) {
     res.send('Error While Adding Earning');
   }
 });
+
+//const ObjectId = require('mongoose').Types.ObjectId;
+
+app.post('/UpdateEarning', jsonParser, async function (req, res) {
+  try {
+    console.log(req.body);
+    const earning_id = new ObjectId(req.body.earning_Id);
+    const new_earning = req.body.amount;
+    console.log(earning_id);
+
+    const existingEarning = await Earnings.find({ _id: earning_id });
+    debugg;
+    console.log(existingEarning);
+    if (!existingEarning) {
+      return res.status(404).send('Earning not found');
+    }
+
+
+    const user_id = new ObjectId(existingEarning.user_id);
+    debugg;
+
+    const user = await User.findOne({ _id: user_id });
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+
+    const previous_earning = existingEarning.amount;
+    const earning_difference = new_earning - previous_earning;
+
+
+    const updated_total_earning = user.total_earning + earning_difference;
+    await User.updateOne({ _id: ObjectId(user_id) }, { $set: { total_earning: updated_total_earning } });
+
+
+    existingEarning.amount = new_earning;
+    await existingEarning.save();
+
+    res.send('Record Saved Successfully');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error While Updating Earning');
+  }
+});
+
 
 app.post('/signup', jsonParser, async function (req, res) {
   try {
