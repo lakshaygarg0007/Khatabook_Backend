@@ -187,17 +187,40 @@ app.post('/deleteEarning', jsonParser, async function (req, res) {
   }
 });
 
-app.post('/getPieCharData', jsonParser, async function (req, res) {
+app.post('/getPieChartData', jsonParser, async function (req, res) {
   res.setHeader('Content-Type', 'application/json');
   res.header("Access-Control-Allow-Origin", "*");
+
   try {
     const filter = { user_id: req.body.user_id };
-    const all = await Expenses.find(filter, { payment_method: 1, amount: 1 });
-    res.send(JSON.stringify(all));
+
+    // Aggregate the expenses based on payment method
+    const aggregationPipeline = [
+      { $match: filter },
+      {
+        $group: {
+          _id: "$payment_method",
+          amount: { $sum: "$amount" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          payment_method: "$_id",
+          amount: 1
+        }
+      }
+    ];
+
+    const result = await Expenses.aggregate(aggregationPipeline);
+
+    res.send(JSON.stringify(result));
   } catch (error) {
-    req.send('Could Not Delete Earning');
+    res.send('Could not retrieve pie chart data');
   }
 });
+
+
 
 app.post('/deleteExpense', jsonParser, async function (req, res) {
   res.setHeader('Content-Type', 'application/json');
