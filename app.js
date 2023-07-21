@@ -61,40 +61,20 @@ app.post('/addEarning', jsonParser, async function (req, res) {
 
 //const ObjectId = require('mongoose').Types.ObjectId;
 
-app.post('/UpdateEarning', jsonParser, async function (req, res) {
+app.post('/updateEarning', jsonParser, async (req, res) => {
   try {
-    console.log(req.body);
-    const earning_id = new ObjectId(req.body.earning_Id);
+    const earning_id = ObjectId(req.body.earning_id);
     const new_earning = req.body.amount;
-    console.log(earning_id);
+    const { amount: previous_earning, user_id } = await Earnings.findOneAndUpdate(
+        { _id: earning_id },
+        { $set: { amount: new_earning } },
+        { new: true }
+    );
 
-    const existingEarning = await Earnings.find({ _id: earning_id });
-    debugg;
-    console.log(existingEarning);
-    if (!existingEarning) {
-      return res.status(404).send('Earning not found');
-    }
-
-
-    const user_id = new ObjectId(existingEarning.user_id);
-    debugg;
-
-    const user = await User.findOne({ _id: user_id });
-    if (!user) {
-      return res.status(404).send('User not found');
-    }
-
-
-    const previous_earning = existingEarning.amount;
+    const user = await User.findById(user_id);
     const earning_difference = new_earning - previous_earning;
-
-
     const updated_total_earning = user.total_earning + earning_difference;
-    await User.updateOne({ _id: ObjectId(user_id) }, { $set: { total_earning: updated_total_earning } });
-
-
-    existingEarning.amount = new_earning;
-    await existingEarning.save();
+    await User.updateOne({ _id: user_id }, { $set: { total_earning: updated_total_earning } });
 
     res.send('Record Saved Successfully');
   } catch (error) {
@@ -102,6 +82,7 @@ app.post('/UpdateEarning', jsonParser, async function (req, res) {
     res.status(500).send('Error While Updating Earning');
   }
 });
+
 
 
 app.post('/signup', jsonParser, async function (req, res) {
