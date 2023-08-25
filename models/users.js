@@ -20,6 +20,14 @@ const userSchema = new mongoose.Schema({
     total_earning: {
         type: String,
         default: '0.0',
+    },
+    subscription_type: {
+        type: String,
+        default: 'Trial'
+    },
+    phone_number: {
+        type: String,
+        default: '9914087195'
     }
 });
 
