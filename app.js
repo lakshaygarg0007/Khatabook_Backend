@@ -13,27 +13,13 @@ const parser = require('body-parser');
 const subscription = require('./models/subscriptions')
 const Calendar = require('./models/calender')
 const Board = require('./models/board')
+const Stock = require('./models/stocks')
 const ObjectId = require('mongodb').ObjectId;
 const fs = require("fs");
 const https = require("https");
-// const corsOptions = {
-//   origin: ['http://localhost:5173/', 'https://localhost:5173/'],
-//   credentials: true,
-//   // Adjust the port as needed
-//   // Other options if needed
-// };
-//
-// const options = {
-//   key: fs.readFileSync('localhost-key.pem'),
-//   cert: fs.readFileSync('localhost.pem'),
-// };
+const bcrypt = require('bcrypt');
 
 
-// console.log('Key content:', options.key.toString());
-// console.log('Cert content:', options.cert.toString());
-
-
-//const server = https.createServer(options, app);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -141,26 +127,25 @@ app.post('/updateExpense', jsonParser, async (req, res) => {
 
 app.post('/signup', jsonParser, async function (req, res) {
     try {
-        console.log(req.body);
-        var user = new User(req.body);
-        res.setHeader('content-type', 'application/json');
-        user.save((err) => {
-            if (err) {
-                if (err.code === 11000) {
-                    console.log('Email id Already Exists');
-                    res.send('Email id Already Exists');
-                } else {
-                    console.log(err);
-                }
-            } else {
-                console.log('Successfully Signed Up');
-                res.send('Successfully Signed Up');
-            }
+
+        const existingUser = await User.findOne({ email: req.body.email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        const user = new User({
+            first_name: req.body.first_name,
+            email: req.body.email,
+            password: hashedPassword
         });
+
+        await user.save();
+        res.json({ message: 'Successfully Signed Up' });
     } catch (error) {
-        res.send('Error While Signup');
+        res.status(500).json({ error: 'Error While Signup' });
     }
 });
+
 
 app.post('/addExpense', jsonParser, async function (req, res) {
   try {
@@ -349,23 +334,28 @@ app.post('/getCalendarData', jsonParser, async function (req, res) {
 });
 
 app.post('/login', jsonParser, async function (req, res) {
-    res.setHeader('content-type', 'application/json');
-    res.header("Access-Control-Allow-Origin", "*");
     try {
-        const filter = {email: req.body.email, password: req.body.password};
-        const user = await User.findOne(filter);
+        res.setHeader('content-type', 'application/json');
+        res.header("Access-Control-Allow-Origin", "*");
+        const user = await User.findOne({ email: req.body.email });
         if (!user) {
-            return res.status(401).send('Failure')
-        } else {
-            res.send({
-                'message': 'Success', 'id': user.id, 'name': user.first_name,
-                'earning': user.total_earning, 'expense': user.total_expense,
-                'email': user.email, 'subscription_type': user.subscription_type,
-                'phone_number': user.phone_number
-            })
+            return res.status(401).json({ error: 'User not found' });
         }
+
+        const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        res.json({
+            'message': 'Success', 'id': user.id, 'name': user.first_name,
+            'earning': user.total_earning, 'expense': user.total_expense,
+            'email': user.email, 'subscription_type': user.subscription_type,
+            'phone_number': user.phone_number
+        });
     } catch (error) {
-        res.send('Error While Login');
+        res.status(500).json({ error: 'Error While Login' });
     }
 });
 
@@ -529,6 +519,25 @@ app.get('/getExpenses', async (req, res) => {
         res.status(500).send('Error While Getting Expenses');
     }
 });
+
+//---------------------------------------------------Stocks--------------------------------------------
+app.post('/getStocksData', jsonParser, async function (req, res) {
+    const filter = {user_id: req.body.user_id};
+    const all = await Stock.find(filter);
+    res.setHeader('content-type', 'application/json');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send(JSON.stringify(all));
+});
+
+app.post('/getTotalStockValue', jsonParser, async function (req, res) {
+    const id = new ObjectId(req.body.user_id);
+    const userStockRecords = await Stock.find({ user_id: id });
+    const totalPurchaseRate = userStockRecords.reduce((total, stock) => total + parseFloat(stock.purchase_rate), 0);
+    res.setHeader('content-type', 'application/json');
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send(JSON.stringify(totalPurchaseRate));
+});
+
 
 
 
