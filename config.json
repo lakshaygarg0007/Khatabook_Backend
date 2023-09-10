@@ -1,0 +1,7 @@
+{
+  "jwtKey" : "e24ceXbMzPpooxsVdzB14YrEB5rDGPr9",
+  "encryptionSecretKey": "QZUBWuT9Vc6W2xEfMrTnFVEHefULkVBb",
+  "saltRounds": 10,
+  "port": 8000,
+  "dbUrl": "mongodb+srv://lakshaygarg:hmtQHahi3aZR2P7T@cluster0.sqbda3w.mongodb.net/test"
+}
