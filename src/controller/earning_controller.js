@@ -1,11 +1,13 @@
 const {ObjectId} = require("mongodb");
-const Earnings = require("../models/earnings");
 const User = require("../models/users");
-const verifyToken = require("../../authorization/AuthorizationJWTToken");
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
 
 const earningService = require('../services/earning_service');
 
-app.post('/deleteEarning', jsonParser, async function (req, res) {
+router.post('/deleteEarning', verifyToken, jsonResponse, async function (req, res) {
     try {
         await earningService.deleteEarning(req.body.earning_id)
         res.send('Earning Record Deleted Successfully');
@@ -14,7 +16,7 @@ app.post('/deleteEarning', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getTotalEarning', async function (req, res) {
+router.post('/getTotalEarning', verifyToken, jsonResponse, async function (req, res) {
     const id = new ObjectId(req.body.id);
     const all = await User.find({_id: id}, {total_earning: 1});
     res.setHeader('content-type', 'application/json');
@@ -22,16 +24,16 @@ app.post('/getTotalEarning', async function (req, res) {
     res.send(JSON.stringify(all));
 });
 
-app.post('/getEarning', verifyToken, jsonParser, async function (req, res) {
+router.post('/getEarning', verifyToken, jsonResponse, async function (req, res) {
     try {
         const earningData = await earningService.getEarning(req.body.user_id)
-        res.add(earningData)
+        res.send(JSON.parse(earningData))
     } catch (error) {
         res.status(500).send('Error While Updating Earning');
     }
 });
 
-app.post('/updateEarning', jsonParser, async (req, res) => {
+router.post('/updateEarning', verifyToken, jsonResponse, async (req, res) => {
     try {
         await earningService.updateEarning(req.body)
         res.send('Record Saved Successfully');
@@ -40,7 +42,7 @@ app.post('/updateEarning', jsonParser, async (req, res) => {
     }
 });
 
-app.post('/addEarning', jsonParser, async function (req, res) {
+router.post('/addEarning', verifyToken, jsonResponse, async function (req, res) {
     try {
         await earningService.addEarning(req.body)
         res.send('Record Saved Successfully')
@@ -48,3 +50,5 @@ app.post('/addEarning', jsonParser, async function (req, res) {
         res.send('Error While Adding Earning');
     }
 });
+
+module.exports = router;

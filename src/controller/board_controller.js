@@ -1,7 +1,12 @@
 const Board = require("../models/board");
 const {ObjectId} = require("mongodb");
 const boardService = require("../services/board_service");
-app.post('/addBoard', jsonParser, async function (req, res) {
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
+
+router.post('/addBoard', verifyToken, jsonResponse, async function (req, res) {
     try {
         await boardService.addBoard(req.body)
         res.send('Record Saved Successfully');
@@ -10,7 +15,7 @@ app.post('/addBoard', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/deleteBoard', jsonParser, async function (req, res) {
+router.post('/deleteBoard', verifyToken, jsonResponse, async function (req, res) {
     try {
         const id = new ObjectId(req.body.boardId)
         await Board.deleteOne({_id: id});
@@ -20,7 +25,7 @@ app.post('/deleteBoard', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getBoard', jsonParser, async function (req, res) {
+router.post('/getBoard', verifyToken, jsonResponse, async function (req, res) {
     const filter = {user_id: req.body.user_id};
     try {
         const board = await boardService.getBoard(filter);
@@ -31,7 +36,7 @@ app.post('/getBoard', jsonParser, async function (req, res) {
 });
 
 
-app.post('/changeCardStatus', jsonParser, async (req, res) => {
+router.post('/changeCardStatus', verifyToken, jsonResponse, async (req, res) => {
     try {
         await boardService.changeCardStatus(req.body)
         res.json({message: "Card status updated successfully"});
@@ -39,3 +44,5 @@ app.post('/changeCardStatus', jsonParser, async (req, res) => {
         res.status(500).json({message: "An error occurred while updating card status"});
     }
 });
+
+module.exports = router;

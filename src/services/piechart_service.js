@@ -19,7 +19,7 @@ async function getPieChartData(userId) {
     ];
 
     const result = await Expenses.aggregate(aggregationPipeline);
-    return JSON.stringify(result)
+    return result
 }
 
 module.exports = {

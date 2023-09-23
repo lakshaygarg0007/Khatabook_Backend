@@ -2,7 +2,8 @@ const User = require('../models/users');
 const CryptoJS = require("crypto-js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const config = require("config.json")
+const config = require("../config")
+const {json} = require("express");
 
 async function signup(userData) {
     const existingUser = await User.findOne({ email: userData.email });
@@ -39,27 +40,29 @@ async function login(loginData) {
             message: 'User Not Found',
         };
     }
-    bcrypt.compare(decryptedPassword, user.password, (err, result) => {
-        if (err) {
-            return {
-                statusCode: 401,
-                message: 'User already exists',
-            };
-        } else if (result) {
-            const id = user.id
-            const tokenVal = jwt.sign({user_id : user.id}, jwtKey, { expiresIn: '1hr' });
-            return json({
-                'message': 'Success', 'id': user.id, 'name': user.first_name,
-                'earning': user.total_earning, 'expense': user.total_expense,
-                'email': user.email, 'subscription_type': user.subscription_type,
-                'phone_number': user.phone_number, token: tokenVal
-            });
-        } else {
-            return {
-                statusCode: 400,
-                message: 'Error While Login',
-            };
-        }
+    return new Promise((resolve, reject) => {
+        bcrypt.compare(decryptedPassword, user.password, (err, result) => {
+            if (err) {
+                reject( {
+                    statusCode: 401,
+                    message: 'User already exists',
+                });
+            } else if (result) {
+                const id = user.id
+                const tokenVal = jwt.sign({user_id: user.id}, config.jwtKey, {expiresIn: '1hr'});
+                resolve({
+                    'message': 'Success', 'id': user.id, 'name': user.first_name,
+                    'earning': user.total_earning, 'expense': user.total_expense,
+                    'email': user.email, 'subscription_type': user.subscription_type,
+                    'phone_number': user.phone_number, token: tokenVal
+                });
+            } else {
+                reject( {
+                    statusCode: 400,
+                    message: 'Error While Login',
+                });
+            }
+        });
     });
 }
 

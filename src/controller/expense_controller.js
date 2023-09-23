@@ -1,7 +1,10 @@
 const expenseService = require('../services/expense_service');
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
 
-
-app.post('/updateExpense', jsonParser, async (req, res) => {
+router.post('/updateExpense', verifyToken, jsonResponse, async (req, res) => {
     try {
         await expenseService.updateExpense(req.body)
         res.send('Record Saved Successfully');
@@ -11,7 +14,7 @@ app.post('/updateExpense', jsonParser, async (req, res) => {
     }
 });
 
-app.post('/addExpense', jsonParser, async function (req, res) {
+router.post('/addExpense', verifyToken, jsonResponse, async function (req, res) {
     try {
         await expenseService.addExpense(req.body)
         res.send('Record Saved Successfully');
@@ -20,7 +23,7 @@ app.post('/addExpense', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getExpense', jsonParser, async function (req, res) {
+router.post('/getExpense', verifyToken, jsonResponse, async function (req, res) {
     try {
         const expenseData = await expenseService.getExpense(req.body.userId);
         res.send(expenseData)
@@ -29,7 +32,7 @@ app.post('/getExpense', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/deleteExpense', jsonParser, async function (req, res) {
+router.post('/deleteExpense', verifyToken, jsonResponse, async function (req, res) {
     try {
         await expenseService.deleteExpense(req.body)
         res.send('Expense Record Deleted Successfully');
@@ -38,7 +41,7 @@ app.post('/deleteExpense', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getTotalExpense', async function (req, res) {
+router.post('/getTotalExpense', verifyToken, jsonResponse, async function (req, res) {
     try {
         const expenseData = await expenseService.getTotalExpense(req.body.userId)
         res.send(expenseData)
@@ -46,3 +49,5 @@ app.post('/getTotalExpense', async function (req, res) {
         res.send('Error While Fetching Total Expense');
     }
 });
+
+module.exports = router;

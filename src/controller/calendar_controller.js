@@ -1,6 +1,10 @@
 const calendarService = require("../services/calendar_service")
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
 
-app.post('/addCalendarEvent', jsonParser, async function (req, res) {
+router.post('/addCalendarEvent', verifyToken, jsonResponse, async function (req, res) {
     try {
         await calendarService.addCalendarEvent(req.body)
         res.send('Record Saved Successfully');
@@ -9,7 +13,7 @@ app.post('/addCalendarEvent', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getCalendarData', jsonParser, async function (req, res) {
+router.post('/getCalendarData', verifyToken, jsonResponse, async function (req, res) {
    try {
        const calendarData = await calendarService.getCalendarData(req.body.userId)
        res.send(calendarData)
@@ -17,3 +21,5 @@ app.post('/getCalendarData', jsonParser, async function (req, res) {
        res.send('Error While Fetching Calendar Data');
    }
 });
+
+module.exports = router;

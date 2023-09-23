@@ -1,10 +1,10 @@
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-const jsonParser = bodyParser.json();
 const paymentMethodsService = require('../services/payment_method_service');
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
 
-app.get('/getPaymentMethods', jsonParser, async function (req, res) {
+router.get('/getPaymentMethods',  verifyToken, jsonResponse, async function (req, res) {
     try {
         const all = await paymentMethodsService.getAllPaymentMethods();
         res.send(JSON.stringify(all));
@@ -13,7 +13,7 @@ app.get('/getPaymentMethods', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/addPaymentMethod', jsonParser, async function (req, res) {
+router.post('/addPaymentMethod', verifyToken, jsonResponse, async function (req, res) {
     try {
         await paymentMethodsService.addPaymentMethod(req.body);
         res.send('Record Saved Successfully');
@@ -21,4 +21,6 @@ app.post('/addPaymentMethod', jsonParser, async function (req, res) {
         res.status(500).send('Error saving payment method');
     }
 });
+
+module.exports = router;
 

@@ -1,6 +1,12 @@
 const subscription = require("../models/subscriptions");
 const {ObjectId} = require("mongodb");
-app.post('/addSubscription', jsonParser, async function (req, res) {
+const express = require('express');
+const router = express.Router();
+const verifyToken = require("../validations/authorization_service")
+const jsonResponse = require('../validations/json_response')
+
+
+router.post('/addSubscription', verifyToken, jsonResponse, async function (req, res) {
     try {
         console.log(req.body);
         const subs = new subscription(req.body);
@@ -12,18 +18,14 @@ app.post('/addSubscription', jsonParser, async function (req, res) {
     }
 });
 
-app.post('/getSubscriptionsList', jsonParser, async function (req, res) {
+router.post('/getSubscriptionsList', verifyToken, jsonResponse, async function (req, res) {
     console.log(req)
     const filter = {user_id: req.body.user_id};
     const all = await subscription.find(filter);
-    res.setHeader('content-type', 'application/json');
-    res.header("Access-Control-Allow-Origin", "*");
     res.send(JSON.stringify(all));
 });
 
-app.post('/deleteSubscription', jsonParser, async function (req, res) {
-    res.setHeader('Content-Type', 'application/json');
-    res.header("Access-Control-Allow-Origin", "*");
+router.post('/deleteSubscription', verifyToken, jsonResponse, async function (req, res) {
     try {
         const id = new ObjectId(req.body.subscription_id)
         await subscription.deleteOne({_id: id});
@@ -32,3 +34,5 @@ app.post('/deleteSubscription', jsonParser, async function (req, res) {
         req.send('Could Not Delete Earning');
     }
 });
+
+module.exports = router;
